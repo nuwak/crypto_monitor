@@ -29,7 +29,7 @@ pub struct Price {
 impl Price {
     pub fn to_db(&self) -> NewSymbol {
         NewSymbol {
-            name: self.symbol.clone(),
+            name: &self.symbol,
             last_price: BigDecimal::from_str(self.last_price.as_str()).unwrap(),
             low_price: BigDecimal::from_str(self.low_price.as_str()).unwrap(),
             high_price: BigDecimal::from_str(self.high_price.as_str()).unwrap(),
@@ -44,3 +44,19 @@ impl Price {
         }
     }
 }
+
+// use diesel::query_builder::{InsertStatement};
+// use diesel::query_dsl::methods::{ExecuteDsl};
+// use diesel::{Table, PgConnection, RunQueryDsl};
+
+// pub fn insert_into_table<T, M>(conn: &Pgconnection, table: T, records: M)
+//     where
+//         T: Table,
+//         M: diesel::Insertable<T>,
+//         InsertStatement<T, M::Values>: ExecuteDsl<PgConnection>,
+// {
+//     use rest_client::schema::symbol;
+//     diesel::insert_into(table)
+//         .values(records)
+//         .execute(conn);
+// }

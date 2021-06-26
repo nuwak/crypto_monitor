@@ -1,17 +1,18 @@
 use std::{thread, time};
-use rest_client::establish_connection;
+use std::str::FromStr;
+
+use bigdecimal::BigDecimal;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::associations::HasTable;
+use diesel::prelude::*;
+
+use rest_client::{establish_connection, create_symbol};
+use rest_client::models::*;
+use rest_client::schema::symbol;
+
+use crate::binance::{Price};
 
 mod binance;
-
-use crate::binance::Price;
-use bigdecimal::BigDecimal;
-use std::str::FromStr;
-use rest_client::schema::symbol;
-use rest_client::models::*;
-use diesel::{RunQueryDsl, QueryDsl, ExpressionMethods};
-use diesel::prelude::*;
-use diesel::associations::HasTable;
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,14 +38,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     .expect("Error saving new symbol");
                 //
                 // println!("update {:#?}", res_symbol);
+                println!("{:#?}", res)
             },
             Err(NotFound) => {
-                let res_symbol: Symbol = diesel::insert_into(symbol::table)
-                    .values(&new_symbol)
-                    .get_result(&conn)
-                    .expect("Error saving new symbol");
+                // let res_symbol: Symbol = diesel::insert_into(symbol::table)
+                //     .values(&new_symbol)
+                //     .get_result(&conn)
+                //     .expect("Error saving new symbol");
 
-                println!("save {:#?}", res_symbol);
+                create_symbol(&conn, &new_symbol);
+                // let symbol_result = diesel::insert_into(symbol::table)
+                //     .values(&new_symbol)
+                //     .get_result(&conn)
+                //     .expect("Error saving new post");
+                println!("save symbol")
+
+                // println!("save {:#?}", res_symbol);
             }
         };
 

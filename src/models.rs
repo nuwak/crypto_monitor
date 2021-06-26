@@ -20,10 +20,10 @@ pub struct Symbol {
 
 use super::schema::symbol;
 
-#[derive(Insertable, Debug)]
 #[table_name="symbol"]
-pub struct NewSymbol {
-    pub name: String,
+#[derive(Insertable, Debug)]
+pub struct NewSymbol<'a> {
+    pub name: &'a String,
     pub last_price: BigDecimal,
     pub low_price: BigDecimal,
     pub high_price: BigDecimal,
