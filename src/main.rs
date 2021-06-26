@@ -1,8 +1,9 @@
 use std::{thread, time};
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rest_client::{create_symbol, establish_connection, update_symbol};
+use diesel::{RunQueryDsl};
+use rest_client::{establish_connection, update_symbol};
 use rest_client::models::*;
 use crate::binance::Price;
+use std::collections::HashMap;
 
 mod binance;
 
@@ -18,29 +19,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
         let symbols = symbol.load::<Symbol>(&conn).expect("Can't read symbols").into_iter()
-            .map(|it| it.name).collect::<Vec<String>>();
+            .map(|it| (it.name, it.id)).collect::<HashMap<String, i64>>();
         dbg!(&symbols);
-        let prices: Vec<&Price> = resp.iter().filter(|it| symbols.contains(&it.symbol)).collect();
-        dbg!(&prices);
-        let new_symbol = prices[0].to_db();
+        let prices: Vec<&Price> = resp.iter().filter(|it| symbols.contains_key(&it.symbol)).collect();
+        // dbg!(&prices);
         for price in prices {
-            update_symbol(&conn, &price.to_db(), &price.id);
+            update_symbol(&conn, &price.to_db(), &symbols.get(&price.symbol).unwrap());
         }
-        match symbol.filter(name.eq("BTCUSDT")).first::<Symbol>(&conn) {
-            Ok(res) => {
-                let count = update_symbol(&conn, &new_symbol, &res.id);
-                println!("updated rows {:#?}", count);
-                println!("{:#?}", res)
-            }
-            Err(_) => {
-                create_symbol(&conn, &new_symbol);
-                println!("save symbol")
-            }
-        };
 
         thread::sleep(time::Duration::from_secs(10));
     }
-
-    // Ok(())
 }
 
