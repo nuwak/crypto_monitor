@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{Utc};
 use rest_client::models::NewSymbol;
 
 #[derive(Default, Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

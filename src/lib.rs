@@ -11,6 +11,9 @@ use dotenv::dotenv;
 use std::env;
 use crate::models::{NewSymbol, Symbol};
 
+use crate::schema::symbol::columns::id;
+use crate::schema::symbol;
+
 
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
@@ -23,10 +26,22 @@ pub fn establish_connection() -> PgConnection {
 }
 
 pub fn create_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol) -> Symbol {
-    use crate::schema::symbol;
 
     diesel::insert_into(symbol::table)
         .values(&*new_symbol)
         .get_result(conn)
         .expect("Error saving new post")
 }
+
+pub fn update_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol, symbol_id: &'a i64) -> usize {
+    // use crate::schema::symbol;
+    // use diesel::prelude::*;
+
+    diesel::update(symbol::table)
+        .filter(id.eq(symbol_id))
+        .set(&*new_symbol)
+        .execute(conn)
+        .expect("Error saving new symbol")
+}
+
+

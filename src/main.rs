@@ -1,16 +1,8 @@
 use std::{thread, time};
-use std::str::FromStr;
-
-use bigdecimal::BigDecimal;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use diesel::associations::HasTable;
-use diesel::prelude::*;
-
-use rest_client::{establish_connection, create_symbol};
+use rest_client::{create_symbol, establish_connection, update_symbol};
 use rest_client::models::*;
-use rest_client::schema::symbol;
-
-use crate::binance::{Price};
+use crate::binance::Price;
 
 mod binance;
 
@@ -25,35 +17,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .json::<Vec<Price>>()
             .await?;
 
-        let res: Vec<&Price> = resp.iter().filter(|it| it.symbol == "BTCUSDT").collect();
-
-        println!("{:#?}", res);
-        let new_symbol = res[0].to_db();
+        let symbols = symbol.load::<Symbol>(&conn).expect("Can't read symbols").into_iter()
+            .map(|it| it.name).collect::<Vec<String>>();
+        dbg!(&symbols);
+        let prices: Vec<&Price> = resp.iter().filter(|it| symbols.contains(&it.symbol)).collect();
+        dbg!(&prices);
+        let new_symbol = prices[0].to_db();
+        for price in prices {
+            update_symbol(&conn, &price.to_db(), &price.id);
+        }
         match symbol.filter(name.eq("BTCUSDT")).first::<Symbol>(&conn) {
             Ok(res) => {
-                // let res_symbol = diesel::update(symbol)
-                //     .filter(id.eq(res.id))
-                //     .set(&new_symbol)
-                //     .execute(&conn)
-                //     .expect("Error saving new symbol");
-                //
-                // println!("update {:#?}", res_symbol);
+                let count = update_symbol(&conn, &new_symbol, &res.id);
+                println!("updated rows {:#?}", count);
                 println!("{:#?}", res)
-            },
-            Err(NotFound) => {
-                // let res_symbol: Symbol = diesel::insert_into(symbol::table)
-                //     .values(&new_symbol)
-                //     .get_result(&conn)
-                //     .expect("Error saving new symbol");
-
+            }
+            Err(_) => {
                 create_symbol(&conn, &new_symbol);
-                // let symbol_result = diesel::insert_into(symbol::table)
-                //     .values(&new_symbol)
-                //     .get_result(&conn)
-                //     .expect("Error saving new post");
                 println!("save symbol")
-
-                // println!("save {:#?}", res_symbol);
             }
         };
 
