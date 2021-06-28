@@ -7,7 +7,8 @@ use std::collections::HashMap;
 use teloxide::prelude::*;
 use teloxide::types::ParseMode;
 use std::env;
-use chrono::Local;
+use chrono::{Local, Utc, Timelike};
+use bigdecimal::BigDecimal;
 
 
 mod binance;
@@ -26,6 +27,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Bot::new(token).auto_send();
 
     loop {
+        let now = Utc::now();
+        if now.hour() > 21 && now.hour() < 6 {
+            log::info!("[{}] {}", Local::now().format(&time), "continue");
+            continue;
+        }
+
         let resp = reqwest::get("https://api.binance.com/api/v3/ticker/24hr")
             .await?
             .json::<Vec<Price>>()
@@ -40,13 +47,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for price in prices {
             let price_new = price.to_db();
             let row = symbol_map.get(&price.symbol).unwrap();
+            let price_change = &price_new.change / &price_new.prev_close_price * BigDecimal::from(100);
 
             if price_new.high_price > row.high_price {
                 let message = format!(
                     "`New HIGH price: {} {:10.2} {:10.2}`",
                     row.name,
                     price_new.high_price,
-                    price_new.last_price,
+                    price_change,
                 );
                 log::info!("[{}] {}", Local::now().format(&time), &message);
                 bot.send_message(chat_id, message)
@@ -56,8 +64,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let message = format!(
                     "`New LOW price: {} {:10.2} {:10.2}`",
                     row.name,
-                    price_new.high_price,
-                    price_new.last_price,
+                    price_new.low_price,
+                    price_change,
                 );
                 log::info!("[{}] {}", Local::now().format(&time), &message);
                 bot.send_message(chat_id, message)
