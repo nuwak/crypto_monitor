@@ -1,7 +1,7 @@
 use std::{thread, time};
 use diesel::{RunQueryDsl};
-use rest_client::{establish_connection, update_symbol};
-use rest_client::models::*;
+use crypto_monitor::{establish_connection, update_symbol};
+use crypto_monitor::models::*;
 use crate::binance::Price;
 use std::collections::HashMap;
 use teloxide::prelude::*;
@@ -15,7 +15,7 @@ mod binance;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use rest_client::schema::symbol::dsl::*;
+    use crypto_monitor::schema::symbol::dsl::*;
     let time = "%Y-%m-%d %H:%M:%S";
 
     let conn = establish_connection();

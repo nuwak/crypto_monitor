@@ -3,7 +3,6 @@ use chrono::{Datelike, Timelike, Utc, Local};
 fn main() {
     let now = Utc::now();
     let local_time = Local::now();
-    let hour = now.hour();
     if now.hour() < 21 && now.hour() > 6 {
         println!("send");
     } else {

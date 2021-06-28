@@ -132,6 +132,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea221b5284a47e40033bf9b66f35f984ec0ea2931eb03505246cd27a963f981b"
 
 [[package]]
+name = "crypto_monitor"
+version = "0.1.0"
+dependencies = [
+ "bigdecimal",
+ "chrono",
+ "diesel",
+ "dotenv",
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "teloxide",
+ "tokio",
+]
+
+[[package]]
 name = "darling"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1012,23 +1029,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
-]
-
-[[package]]
-name = "rest_client"
-version = "0.1.0"
-dependencies = [
- "bigdecimal",
- "chrono",
- "diesel",
- "dotenv",
- "log",
- "pretty_env_logger",
- "reqwest",
- "serde",
- "serde_json",
- "teloxide",
- "tokio",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [package]
-name = "rest_client"
+name = "crypto_monitor"
 version = "0.1.0"
 authors = ["Nuwak <mr.igorr@gmail.com>"]
 edition = "2018"

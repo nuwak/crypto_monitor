@@ -1,12 +1,12 @@
 extern crate diesel;
 
 use self::diesel::prelude::*;
-use rest_client::*;
-use rest_client::models::Symbol;
+use crypto_monitor::*;
+use crypto_monitor::models::Symbol;
 
 
 fn main() {
-    use rest_client::schema::symbol::dsl::*;
+    use crypto_monitor::schema::symbol::dsl::*;
 
     let connection = establish_connection();
     let results = symbol

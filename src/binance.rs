@@ -1,7 +1,7 @@
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 use chrono::{Utc};
-use rest_client::models::NewSymbol;
+use crypto_monitor::models::NewSymbol;
 
 #[derive(Default, Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,7 +55,7 @@ impl Price {
 //         M: diesel::Insertable<T>,
 //         InsertStatement<T, M::Values>: ExecuteDsl<PgConnection>,
 // {
-//     use rest_client::schema::symbol;
+//     use crypto_monitor::schema::symbol;
 //     diesel::insert_into(table)
 //         .values(records)
 //         .execute(conn);
