@@ -1,8 +1,10 @@
+extern crate dotenv;
 use std::{thread, time};
 use diesel::{RunQueryDsl};
 use crypto_monitor::{establish_connection, update_symbol};
 use crypto_monitor::models::*;
 use crate::binance::Price;
+use crate::config::Config;
 use std::collections::HashMap;
 use teloxide::prelude::*;
 use teloxide::types::ParseMode;
@@ -12,31 +14,48 @@ use bigdecimal::BigDecimal;
 
 
 mod binance;
+mod config;
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use crypto_monitor::schema::symbol::dsl::*;
-    let time = "%Y-%m-%d %H:%M:%S";
 
-    let conn = establish_connection();
+    let config = Config::init();
+
+    // let chat_id = env::var(&"TELEGRAM_CHAT_ID").unwrap().parse::<i64>().unwrap();
+
+    let time = "%Y-%m-%d %H:%M:%S";
+    let conn = establish_connection(&config.db);
     teloxide::enable_logging!();
     log::info!("Starting dices_bot...");
-    let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN must be set");
-    let chat_id: i64 = env::var("TELEGRAM_CHAT_ID").unwrap().parse().unwrap();
-    dbg!(&chat_id);
-    let bot = Bot::new(token).auto_send();
+
+    let bot = Bot::new(&config.telegram.token).auto_send();
 
     loop {
-        let now = Utc::now();
-        if now.hour() > 21 && now.hour() < 6 {
+        let hour = Utc::now().hour();
+        if hour > 20 || hour < 6 {
             log::info!("[{}] {}", Local::now().format(&time), "continue");
             continue;
         }
 
-        let resp = reqwest::get("https://api.binance.com/api/v3/ticker/24hr")
-            .await?
-            .json::<Vec<Price>>()
-            .await?;
+        let resp = match reqwest::get(&config.api).await {
+            Ok(resp) => {
+                match resp.json::<Vec<Price>>().await {
+                    Ok(resp) => resp,
+                    _ => {
+                        log::error!("[{}] {}", Local::now().format(&time), "response parsing error");
+                        thread::sleep(time::Duration::from_secs(60));
+                        continue;
+                    }
+                }
+            }
+            _ => {
+                log::error!("[{}] {}", Local::now().format(&time), "request error");
+                thread::sleep(time::Duration::from_secs(60));
+                continue;
+            }
+        };
 
         let symbols: Vec<Symbol> = symbol.load::<Symbol>(&conn).expect("Can't read symbols").into_iter().collect();
         let mut symbol_map: HashMap<&String, &Symbol> = HashMap::new();
@@ -57,9 +76,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     price_change,
                 );
                 log::info!("[{}] {}", Local::now().format(&time), &message);
-                bot.send_message(chat_id, message)
+                bot.send_message(config.telegram.chat_id, message)
                     .parse_mode(ParseMode::MarkdownV2)
-                    .send().await;
+                    .send();
             } else if price_new.low_price < row.low_price {
                 let message = format!(
                     "`New LOW price: {} {:10.2} {:10.2}`",
@@ -68,9 +87,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     price_change,
                 );
                 log::info!("[{}] {}", Local::now().format(&time), &message);
-                bot.send_message(chat_id, message)
+                bot.send_message(config.telegram.chat_id, message)
                     .parse_mode(ParseMode::MarkdownV2)
-                    .send().await;
+                    .send();
             }
 
             update_symbol(&conn, &price_new, &row.id);

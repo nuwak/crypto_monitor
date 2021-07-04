@@ -7,26 +7,18 @@ extern crate dotenv;
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use dotenv::dotenv;
-use std::env;
 use crate::models::{NewSymbol, Symbol};
 
 use crate::schema::symbol::columns::id;
 use crate::schema::symbol;
 
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    println!("{:#?}", database_url);
-    PgConnection::establish(&database_url)
+pub fn establish_connection(database_url: &String) -> PgConnection {
+    PgConnection::establish(database_url)
         .expect(&format!("Error connecting to {}", database_url))
 }
 
 pub fn create_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol) -> Symbol {
-
     diesel::insert_into(symbol::table)
         .values(&*new_symbol)
         .get_result(conn)
@@ -34,9 +26,6 @@ pub fn create_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol) -> Symb
 }
 
 pub fn update_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol, symbol_id: &'a i64) -> usize {
-    // use crate::schema::symbol;
-    // use diesel::prelude::*;
-
     diesel::update(symbol::table)
         .filter(id.eq(symbol_id))
         .set(&*new_symbol)
