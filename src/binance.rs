@@ -2,6 +2,8 @@ use bigdecimal::BigDecimal;
 use std::str::FromStr;
 use chrono::{Utc};
 use crypto_monitor::models::NewSymbol;
+// use log::{error};
+// use reqwest::Error;
 
 #[derive(Default, Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -43,20 +45,22 @@ impl Price {
             created_at: Utc::now().naive_utc()
         }
     }
+
+    // pub async fn get() -> Result<Vec<Price>, Error>
+    // {
+    //     return match reqwest::get(&config.api).await {
+    //         Ok(resp) => {
+    //             match resp.json::<Vec<Price>>().await {
+    //                 Ok(resp) => Ok(resp),
+    //                 Error => {
+    //                     error!("response parsing error");
+    //                     Error
+    //                 }
+    //             }
+    //         }
+    //         _ => {
+    //             error!("request error");
+    //         }
+    //     };
+    // }
 }
-
-// use diesel::query_builder::{InsertStatement};
-// use diesel::query_dsl::methods::{ExecuteDsl};
-// use diesel::{Table, PgConnection, RunQueryDsl};
-
-// pub fn insert_into_table<T, M>(conn: &Pgconnection, table: T, records: M)
-//     where
-//         T: Table,
-//         M: diesel::Insertable<T>,
-//         InsertStatement<T, M::Values>: ExecuteDsl<PgConnection>,
-// {
-//     use crypto_monitor::schema::symbol;
-//     diesel::insert_into(table)
-//         .values(records)
-//         .execute(conn);
-// }

@@ -139,6 +139,8 @@ dependencies = [
  "chrono",
  "diesel",
  "dotenv",
+ "env_logger",
+ "lazy_static",
  "log",
  "pretty_env_logger",
  "reqwest",

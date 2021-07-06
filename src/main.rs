@@ -1,41 +1,37 @@
 extern crate dotenv;
+
 use std::{thread, time};
 use diesel::{RunQueryDsl};
-use crypto_monitor::{establish_connection, update_symbol};
+use crypto_monitor::{update_symbol};
 use crypto_monitor::models::*;
 use crate::binance::Price;
-use crate::config::Config;
 use std::collections::HashMap;
 use teloxide::prelude::*;
 use teloxide::types::ParseMode;
-use std::env;
-use chrono::{Local, Utc, Timelike};
+use chrono::{Utc, Timelike};
 use bigdecimal::BigDecimal;
+use crate::bootstrap::{log_init, boot};
+use log::{error, info};
 
 
 mod binance;
+mod bootstrap;
 mod config;
 
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use crypto_monitor::schema::symbol::dsl::*;
+    log_init();
+    let (config, conn, bot) = boot();
+    bot.send_message(config.telegram.chat_id, "start").send().await;
 
-    let config = Config::init();
-
-    // let chat_id = env::var(&"TELEGRAM_CHAT_ID").unwrap().parse::<i64>().unwrap();
-
-    let time = "%Y-%m-%d %H:%M:%S";
-    let conn = establish_connection(&config.db);
-    teloxide::enable_logging!();
-    log::info!("Starting dices_bot...");
-
-    let bot = Bot::new(&config.telegram.token).auto_send();
+    info!("Starting dices_bot...");
 
     loop {
         let hour = Utc::now().hour();
         if hour > 20 || hour < 6 {
-            log::info!("[{}] {}", Local::now().format(&time), "continue");
+            info!("continue");
             continue;
         }
 
@@ -44,14 +40,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match resp.json::<Vec<Price>>().await {
                     Ok(resp) => resp,
                     _ => {
-                        log::error!("[{}] {}", Local::now().format(&time), "response parsing error");
+                        error!("response parsing error");
                         thread::sleep(time::Duration::from_secs(60));
                         continue;
                     }
                 }
             }
             _ => {
-                log::error!("[{}] {}", Local::now().format(&time), "request error");
+                error!("request error");
                 thread::sleep(time::Duration::from_secs(60));
                 continue;
             }
@@ -75,10 +71,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     price_new.high_price,
                     price_change,
                 );
-                log::info!("[{}] {}", Local::now().format(&time), &message);
+                info!("{}", &message);
                 bot.send_message(config.telegram.chat_id, message)
                     .parse_mode(ParseMode::MarkdownV2)
-                    .send();
+                    .send().await;
             } else if price_new.low_price < row.low_price {
                 let message = format!(
                     "`New LOW price: {} {:10.2} {:10.2}`",
@@ -86,16 +82,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     price_new.low_price,
                     price_change,
                 );
-                log::info!("[{}] {}", Local::now().format(&time), &message);
+                info!("{}", &message);
                 bot.send_message(config.telegram.chat_id, message)
                     .parse_mode(ParseMode::MarkdownV2)
-                    .send();
+                    .send().await;
             }
 
             update_symbol(&conn, &price_new, &row.id);
         }
 
-        log::info!("[{}] finished iteration", Local::now().format(&time));
+        info!("finished iteration");
         thread::sleep(time::Duration::from_secs(60));
     }
 }

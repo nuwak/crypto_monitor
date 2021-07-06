@@ -5,6 +5,8 @@ pub mod models;
 extern crate diesel;
 extern crate dotenv;
 
+pub mod config;
+
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use crate::models::{NewSymbol, Symbol};
@@ -32,5 +34,3 @@ pub fn update_symbol<'a>(conn: &PgConnection, new_symbol: &'a NewSymbol, symbol_
         .execute(conn)
         .expect("Error saving new symbol")
 }
-
-

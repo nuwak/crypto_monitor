@@ -2,11 +2,13 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 
+#[derive(Debug)]
 pub struct Telegram {
     pub token: String,
     pub chat_id: i64,
 }
 
+#[derive(Debug)]
 pub struct Config {
     pub db: String,
     pub api: String,
