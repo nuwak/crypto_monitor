@@ -32,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let hour = Utc::now().hour();
         if hour > 20 || hour < 6 {
             info!("continue");
+            thread::sleep(time::Duration::from_secs(60));
             continue;
         }
 
