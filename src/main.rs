@@ -40,8 +40,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(resp) => {
                 match resp.json::<Vec<Price>>().await {
                     Ok(resp) => resp,
-                    _ => {
+                    Err(err) => {
                         error!("response parsing error");
+                        dbg!(err);
                         thread::sleep(time::Duration::from_secs(60));
                         continue;
                     }
