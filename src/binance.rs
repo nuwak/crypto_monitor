@@ -24,8 +24,8 @@ pub struct Price {
     pub low_price: String,
     pub volume: String,
     pub quote_volume: String,
-    pub last_id: u64,
-    pub count: u64,
+    pub last_id: i64,
+    pub count: i64,
 }
 
 impl Price {
